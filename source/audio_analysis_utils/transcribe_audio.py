@@ -6,7 +6,8 @@ import nltk
 from nltk.stem import WordNetLemmatizer
 import re
 import spacy
-
+from tensorflow.keras.layers import MaxPooling2D, Conv2D, Input, Add, MaxPool2D, Flatten, AveragePooling2D, Dense, BatchNormalization, ZeroPadding2D, Activation, Concatenate, UpSampling2D
+from tensorflow.keras.models import Model
 import source.whisper.whisper as whisper
 import source.config as config
 

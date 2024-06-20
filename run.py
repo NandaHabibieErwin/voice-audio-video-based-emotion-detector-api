@@ -6,7 +6,7 @@ import source.audio_analysis_utils.predict as audio_predict
 import source.face_emotion_utils.model as face_model
 import source.face_emotion_utils.predict as face_predict
 import source.face_emotion_utils.utils as face_utils
-import source.config as config
+from source import config
 import source.face_emotion_utils.preprocess_main as face_preprocess_main
 
 import source.audio_face_combined.model as combined_model

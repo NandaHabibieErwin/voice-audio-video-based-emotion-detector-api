@@ -35,7 +35,7 @@ def predict(input_file_name, model_save_path=config.AUDIO_MODEL_SAVE_PATH):
     extracted_mfcc = torch.from_numpy(extracted_mfcc).float().to(config.device)
 
     # Load the model
-    model = torch.load(model_save_path)
+    model = torch.load(model_save_path, map_location=torch.device('cpu'))
     model.to(config.device).eval()
 
     prediction = model(extracted_mfcc)
