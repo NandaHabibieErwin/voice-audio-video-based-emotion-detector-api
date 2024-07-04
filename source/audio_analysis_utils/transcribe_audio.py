@@ -1,6 +1,7 @@
 import librosa
 import torch
 from transformers import DistilBertTokenizer, DistilBertForSequenceClassification, pipeline
+import transformers
 import time
 import nltk
 from nltk.stem import WordNetLemmatizer
@@ -10,6 +11,7 @@ from tensorflow.keras.layers import MaxPooling2D, Conv2D, Input, Add, MaxPool2D,
 from tensorflow.keras.models import Model
 import source.whisper.whisper as whisper
 import source.config as config
+import keras
 
 import source.audio_analysis_utils.utils as audio_utils
 
@@ -29,8 +31,7 @@ def init(max_threads=1):
 
     tokenizer = DistilBertTokenizer.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
     sentiment_classifier = DistilBertForSequenceClassification.from_pretrained("distilbert-base-uncased-finetuned-sst-2-english")
-    emotion_classifier = pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base",
-                          return_all_scores=True)
+    emotion_classifier = pipeline("text-classification", model="j-hartmann/emotion-english-distilroberta-base", return_all_scores=True, framework="pt")
 
     for i in range(max_threads):
         transcribe_model = whisper.load_model("medium.en")

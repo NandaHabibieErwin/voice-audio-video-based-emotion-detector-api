@@ -31,7 +31,7 @@ PREPROCESSED_IMAGES_FOLDER_PATH = DATA_FOLDER_PATH + "preprocessed_images_data" 
 PREPROCESSED_AUDIO_FOLDER_PATH = DATA_FOLDER_PATH + "preprocessed_audio_data" + ls
 PREPROCESSED_AV_FOLDER_PATH = DATA_FOLDER_PATH + "preprocessed_AV_data" + ls
 
-CLEANED_LABELLED_AUDIO_FOLDER_PATH = DATA_FOLDER_PATH + "cleaned_labelled_audio" + ls
+CLEANED_LABELLED_AUDIO_FOLDER_PATH = "F:\\backup\\data\\extracted_audio\\" + "cleaned_labelled_audio" + ls
 ORIGINAL_AV_DATASET_PATH = DATA_FOLDER_PATH + "original_AV" + ls
 __ORIGINAL_FACES_DATASET_PATH = DATA_FOLDER_PATH + "original_faces" + ls
 EXTRACTED_AUDIO_FOLDER_PATH = DATA_FOLDER_PATH + "extracted_audio" + ls

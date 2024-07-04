@@ -228,7 +228,7 @@ def predict(
     if verbose:
         print(f"Best hyperparameters, {best_hyperparameters}")
 
-    model = torch.load(model_save_path)
+    model = torch.load(model_save_path, map_location=torch.device('cpu'))
     model.to(config.device).eval()
 
     if video_mode:
@@ -283,4 +283,10 @@ def predict(
                 else:
                     print(res)
 
-        return result
+        emotion_name, emotion_index, prediction_probabilities = result[0], result[1], result[2]
+        prediction = emotion_name
+        confidence = max(prediction_probabilities)
+        softmax = np.exp(prediction_probabilities) / np.sum(np.exp(prediction_probabilities))
+
+        # Return only the required values along with the original result tuple
+        return prediction, confidence, softmax, result

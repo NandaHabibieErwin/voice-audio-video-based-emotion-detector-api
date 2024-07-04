@@ -97,12 +97,12 @@ def preprocess_audio(
     all_cnt = 0
     for folder in original_audio_folders:
         print(folder)
-        for file in os.listdir(folder):
+        for file in os.listdir("F:\\backup\\data\\extracted_audio\\RAVDESS\\train"):
             all_cnt += 1
 
     total_org_len = 0
     for folder in original_audio_folders:
-        total_org_len += len(os.listdir(folder))
+        total_org_len += len(os.listdir("F:\\backup\\data\\extracted_audio\\RAVDESS\\train"))
 
     # Clean the audio of all the dataset's folders if cleaned_files folder has fewer files than the original dataset
     total_clean_files_len = len(os.listdir(cleaned_files_path + "train")) + len(os.listdir(cleaned_files_path + "test"))

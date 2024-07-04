@@ -12,7 +12,7 @@ import source.audio_face_combined.model as model
 
 import source.audio_analysis_utils.utils as audio_utils
 import source.audio_analysis_utils.transcribe_audio as transcribe_audio
-
+import source.pytorch_utils.training_utils
 import source.face_emotion_utils.utils as face_utils
 
 import source.config as config
@@ -70,7 +70,8 @@ def predict_video(video_path, video_buffer_folder=config.MAIN_PATH + "VideoBuffe
         show_img=show_image,
     )
 
-    combined_model = torch.load(model_save_path)
+    # Load the model
+    combined_model = torch.load(model_save_path, map_location=torch.device('cpu'))
     combined_model.to(config.device).eval()
 
     if show_image == 1:
@@ -200,3 +201,13 @@ def predict_video(video_path, video_buffer_folder=config.MAIN_PATH + "VideoBuffe
     print("Check output folder for the output files, 'video_transcript.txt', 'transcript_word_occurrences.csv' and 'video_output.csv'")
 
     transcribe_audio.delete_models()
+
+    return {
+        "predictions": predictions,
+        "sum_probs": sum_probs,
+        "durations": durations,
+        "transcript": video_transcript,
+        "common_words": common_words,
+        "confidence": max(sum_probs) / len(predictions),
+        "softmax_probs_string": audio_utils.get_softmax_probs_string(sum_probs, list(config.EMOTION_INDEX.values()))
+    }

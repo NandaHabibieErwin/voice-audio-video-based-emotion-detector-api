@@ -251,5 +251,5 @@ def find_filename_match(known_filename, directory):
         if known_filename in file_name:
             return os.path.join(directory, file_name)
 
-    print("NO MATCH FOUND FOR: ", known_filename, "IN", directory)
+    print("NO MATCH FOUND FOR:", known_filename, "IN", directory)
     return None
