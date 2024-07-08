@@ -85,14 +85,13 @@ def simply_emotion_softmax_list(all_emotions_Y):
     return all_emotions_Y
 
 
-def get_softmax_probs_string(softmax, class_names_list):
-    class_name_prob_pairs = {}
+def get_softmax_probs_string(softmax, class_names_list, decimal_places=6):
+    softmax_probs = []
     for i, prob in enumerate(softmax):
-        class_name_prob_pairs[class_names_list[i]] = prob
-
-    softmax_probs = ""
-    for i, class_name in enumerate(class_names_list):
-        softmax_probs += f"{class_name}: {round(class_name_prob_pairs[class_name] * 100, 2)}%\n"
+        softmax_probs.append({
+            'label': class_names_list[i],
+            'probability': round(float(prob), decimal_places)
+        })
 
     return softmax_probs
 

@@ -235,34 +235,7 @@ def get_callbacks(
 
 # Once the best hyperparameters are found using tune_hyperparameters(), call this function to train the model
 def train(hp_dict, metric='val_acc', metric_mode='max', preprocess_again=False, initial_lr=INITIAL_LR, epochs=INITIAL_EPOCH):
-    """
 
-    Parameters
-    ----------
-    hp_dict: dict
-        Contains the hyperparameters to be used for training and preprocessing.
-
-    metric: str
-        Target metric whose max or min value is to be found in the training process and returned. Will be used to find the best hyperparameters.
-
-    metric_mode: str
-        'max' or 'min' depending on whether the metric is to be maximised or minimised
-
-    preprocess_again: bool
-        If True, the data will be preprocessed again. If False, the data will be loaded from the preprocessed files.
-
-    initial_lr: float
-        Initial learning rate to be used for training. Can be scheduled to change during training using the reduce_lr_on_plateau callback in the pytorch_callbacks.py file.
-
-    epochs: int
-        Number of epochs to train for. Can step out of the training loop early if the early_stopping callback in the pytorch_callbacks.py file is triggered.
-
-    Returns
-    -------
-    opt_result: float
-        The best value of the metric found during training. This is the value that will be used to find the best hyperparameters.
-
-    """
     def get_min_max_vale(history, key):
         min = 99999
         max = -99999
@@ -398,38 +371,7 @@ def hyper_parameter_optimise(
         max_trials=MAX_TRIALS,
         load_if_exists=True,
 ):
-    """
-    Main function for hyperparameter optimisation using hyperopt
-
-    Parameters
-    ----------
-    search_space: dict
-        Example:
-            tune_hp_ranges = {
-                "dropout_rate": ([0.0, 0.3, 4], 'range')
-                "conv_model": (["resnet18", "resnet101", "resnext50_32x4d"], 'choice'),
-            }
-
-    best_hp_json_save_path: str
-        Path to the json file where the best hyperparameters will be saved
-
-    tuner_csv_save_path: str
-        Path to the csv file where the hyperparameter tuning results will be saved.
-        A modified version of the csv file will be saved in the same directory for sorted results
-
-    tuner_obj_save_path: str
-        Path to the file where the hyperparameter tuning object will be saved
-
-    tune_target: str
-        The metric to be optimised. This is the metric that will be used to find the best hyperparameters
-
-    max_trials: int
-        The maximum number of trials to be run for hyperparameter optimisation
-
-    load_if_exists: bool
-        Whether to load the tuner object from the tuner_obj_save_path if it exists or not.
-
-    """
+   
     global tune_cnt, total_tune_cnt, start_time
 
     if load_if_exists:

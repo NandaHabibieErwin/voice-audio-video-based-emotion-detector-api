@@ -106,81 +106,6 @@ def _get_prediction(
 
     return_objs = (emotion_index_dict[prediction_index], prediction_index, list(pred_numpy), img)
 
-    if grad_cam:
-        target_layer = model.base_model_conv.layer3
-
-        grad_cam = _create_gradcam(model, model_input, target_layer, config.device)
-
-        face_img = model_input[0][0]
-        face_img = np.transpose(face_img, (1, 2, 0))
-        face_img = face_img * 255.
-
-        if verbose:
-            print("face", face_img.shape)
-
-        result_pil = _overlay_gradcam_on_image(face_img, grad_cam, alpha=0.5)
-
-        if imshow and not video_mode:
-            result_pil.show()
-
-        result_npy = np.array(result_pil, dtype=np.uint8)
-
-        if feature_maps_flag:
-            # 
-            target_layers = [
-                model.base_model_conv.layer1,
-                model.base_model_conv.layer2,
-                model.base_model_conv.layer3,
-                model.base_model_conv.layer4,
-            ]
-            for i, layer in enumerate(target_layers):
-                if verbose:
-                    print("Extracting feature maps from layer", i)
-                feature_maps = []
-
-                def hook_fn(module, input, output):
-                    feature_maps.append(output.detach())
-
-                layer.register_forward_hook(hook_fn)
-                output = model(torch.from_numpy(np.array(model_input[0])).float().to(device),
-                               torch.from_numpy(np.array(model_input[1])).float().to(device))
-
-                _visualise_feature_maps(feature_maps[0], config.OUTPUT_FOLDER_PATH + "feature_maps_" + str(i) + ".png")
-                layer._forward_hooks.clear()
-
-        return_objs = (emotion_index_dict[prediction_index], prediction_index, list(pred_numpy), img, result_npy)
-
-        if grad_cam_on_video:
-            face_input = result_npy.copy()
-        else:
-            face_input = face_input_org.copy()
-
-        face_input = cv2.rectangle(face_input,
-                                   (face_input.shape[0] // 20, face_input.shape[0] // 20),
-                                   (int(face_input.shape[0] * 0.95), int(face_input.shape[0] * 0.95)),
-                                   (0, 255, 0),
-                                   max(face_input.shape[0] // 100, 1))
-        face_input = cv2.resize(face_input, (face_config.FACE_SIZE * 5, face_config.FACE_SIZE * 5))
-        cv2.putText(img=face_input,
-                    text=string_img,
-                    org=(face_input.shape[0] // 15, face_input.shape[0] // 8),
-                    fontFace=cv2.QT_FONT_NORMAL,
-                    fontScale=0.75,
-                    color=(0, 255, 0),
-                    thickness=2)
-
-        if imshow:
-            cv2.imshow("face", face_input)
-
-        if not video_mode:
-            cv2.imwrite(config.OUTPUT_FOLDER_PATH + "grad_cam.jpg", cv2.cvtColor(result_npy, cv2.COLOR_RGB2BGR))
-            cv2.imwrite(config.OUTPUT_FOLDER_PATH + "emotion.jpg", cv2.cvtColor(face_input, cv2.COLOR_BGR2RGB))
-
-            cv2.waitKey(0)
-            cv2.destroyAllWindows()
-            cv2.waitKey(1)
-            cv2.destroyAllWindows()
-
     return return_objs
 
 
@@ -195,34 +120,6 @@ def predict(
         grad_cam=face_config.GRAD_CAM,
         grad_cam_on_video=face_config.GRAD_CAM_ON_VIDEO,
 ):
-    """
-    Predicts the emotion of the face in the image or video.
-    Takes the full image, crops the face, detects the landmarks, and then runs the model on the face image and the landmarks.
-
-    Parameters
-    ----------
-    image - path to image or video, or a numpy array of the image. Numpy array will only work if not video_mode or webcam_mode
-        (Note: program currently only supports one face per image, if you'd like to add support for multiple faces, please submit a pull request.
-        You'd just need to detect the faces using face_mesh.py or something similar, and then run the model on each face)
-    video_mode - if True, will run the model on each frame of the video
-    webcam_mode - if True, will run the model on each frame of the webcam
-    model_save_path - path to the model to load
-    imshow - if True, will show the image with the prediction
-    verbose - if True, will print out the prediction probabilities
-
-    Returns
-    -------
-    You'll get a tuple of the following based on the argments you pass in:
-
-    if not webcam_mode and not video_mode:
-        if grad_cam:
-            Emotion name, emotion index, list of prediction probabilities, image as numpy, grad cam overlay as numpy
-        else:
-            Emotion name, emotion index, list of prediction probabilities, image as numpy
-    else:
-        None
-
-    """
 
     best_hyperparameters = face_utils.load_dict_from_json(best_hp_json_path)
     if verbose:
@@ -231,62 +128,28 @@ def predict(
     model = torch.load(model_save_path, map_location=torch.device('cpu'))
     model.to(config.device).eval()
 
-    if video_mode:
-        cap = cv2.VideoCapture(image)
-        fps_in = cap.get(cv2.CAP_PROP_FPS)
+    if type(image) == str:
+        image = cv2.imread(image)
+        image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        while True:
-            init_time = time.time()
-            ret, frame = cap.read()
-            if not ret:
-                break
-            _get_prediction(best_hp=best_hyperparameters, img=frame, model=model, imshow=False, video_mode=True, verbose=verbose)
+    result = _get_prediction(best_hp=best_hyperparameters, img=image, model=model, imshow=imshow, video_mode=video_mode, verbose=verbose, grad_cam=grad_cam)
 
-            wait_time = round((1000 / fps_in) - (time.time() - init_time))
-            print("wait_time: ", wait_time)
-            cv2.waitKey(wait_time)
+    if verbose:
+        print("\n\n\nResults:")
+        for res in result:
+            # check if numpy
+            if type(res) == np.ndarray:
+                print(res.shape)
+            else:
+                print(res)
 
-        return None
-    if webcam_mode:
-        cap = cv2.VideoCapture(0)
-        while True:
-            init_time = time.time()
-            ret, frame = cap.read()
-            if not ret:
-                break
-            _get_prediction(best_hp=best_hyperparameters,
-                            img=frame,
-                            model=model,
-                            imshow=True,
-                            video_mode=True,
-                            verbose=verbose,
-                            grad_cam=True,
-                            grad_cam_on_video=grad_cam_on_video,
-                            feature_maps_flag=False)
+    emotion_name, emotion_index, prediction_probabilities = result[0], result[1], result[2]
+    prediction = emotion_name
+    confidence = max(prediction_probabilities)
+    softmax = np.exp(prediction_probabilities) / np.sum(np.exp(prediction_probabilities))
+    softmax = [float(s) for s in softmax]
 
-            cv2.waitKey(1)
+    # Return only the required values along with the original result tuple
+    return prediction, confidence, softmax, result
 
-        return None
-    else:
-        if type(image) == str:
-            image = cv2.imread(image)
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        result = _get_prediction(best_hp=best_hyperparameters, img=image, model=model, imshow=imshow, video_mode=video_mode, verbose=verbose, grad_cam=grad_cam)
-
-        if verbose:
-            print("\n\n\nResults:")
-            for res in result:
-                # check if numpy
-                if type(res) == np.ndarray:
-                    print(res.shape)
-                else:
-                    print(res)
-
-        emotion_name, emotion_index, prediction_probabilities = result[0], result[1], result[2]
-        prediction = emotion_name
-        confidence = max(prediction_probabilities)
-        softmax = np.exp(prediction_probabilities) / np.sum(np.exp(prediction_probabilities))
-
-        # Return only the required values along with the original result tuple
-        return prediction, confidence, softmax, result

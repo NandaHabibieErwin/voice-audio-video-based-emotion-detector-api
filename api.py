@@ -56,16 +56,18 @@ def upload_image():
     # emotion, confidence, softmax_probs_string = face_predict.predict(image)
     prediction, confidence, softmax_probs, _ = face_predict.predict(image)
     
-    # Convert softmax probabilities to string if needed
-    softmax_probs_string = ','.join(map(str, softmax_probs))
-    confidence = float(confidence)
+    prediction_index = np.argmax(softmax_probs)
+    prediction_label = config.EMOTION_INDEX[prediction_index]
+    prediction_probability = np.max(softmax_probs)
+
+    softmax_probs_list = [{"label": config.EMOTION_INDEX[i], "probability": prob} for i, prob in enumerate(softmax_probs)]
 
     
     # Return prediction result
     return jsonify({
-        'emotion': prediction,
-        'confidence': confidence,
-        'softmax_probs_string': softmax_probs_string
+        'emotion': prediction_label,
+        'confidence': prediction_probability,
+        'softmax_probs_string': softmax_probs_list
     })
 
 @app.route('/upload-audio', methods=['POST'])
@@ -88,6 +90,8 @@ def upload_audio():
     confidence = make_serializable(confidence)
     softmax_probs_string = make_serializable(softmax_probs_string)
     
+    softmax_probs_list = [{"label": config.EMOTION_INDEX[i], "probability": prob} for i, prob in enumerate(softmax_probs_string)]
+    
     # Return prediction result
     return jsonify({'emotion': emotion, 'confidence': confidence, 'softmax_probs_string': softmax_probs_string})
 
@@ -104,7 +108,6 @@ def upload_video():
     prediction_result = combined_predict.predict_video(file_path)
     
     # Extract necessary details
-    transcript = prediction_result['transcript']
     confidence = prediction_result['confidence']
     softmax_probs_string = prediction_result['softmax_probs_string']
     
@@ -118,8 +121,7 @@ def upload_video():
     return jsonify({
         'emotion': emotion,
         'confidence': confidence,
-        'softmax_probs_string': softmax_probs_string,
-        'transcript': transcript
+        'softmax_probs_string': softmax_probs_string,        
     })
 
 

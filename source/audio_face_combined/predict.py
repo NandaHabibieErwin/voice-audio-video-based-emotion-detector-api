@@ -143,18 +143,6 @@ def predict_video(video_path, video_buffer_folder=config.MAIN_PATH + "VideoBuffe
             temp_dict[i] = durations[i]
     durations = temp_dict
 
-    # Write emotion prediction to csv file
-    print("\n\n\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-    with open(config.OUTPUT_FOLDER_PATH + f"video_output_{video_name.split('.')[0]}.csv", "w") as csv_file:
-        writer = csv.writer(csv_file, lineterminator='\n')
-        title = ["Start", "End"]
-        print(title[0] + "\t" + title[1] + "\t\t", end="")
-        print()
-        writer.writerow(title)
-        for duration in durations:
-            print(str(durations[duration]).strip('[]').replace(", ", "\t\t"))
-            writer.writerow(durations[duration])
-
     print("\n\n\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
     print("Overall video prediction probabilities:\n")
     for i in range(len(sum_probs)):
@@ -163,51 +151,12 @@ def predict_video(video_path, video_buffer_folder=config.MAIN_PATH + "VideoBuffe
     print("\n\nCheck the VideoBufferFolder for the cropped videos corresponding to the above file names.")
 
     print("\n\n\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-
-    # Transcribe audio
-    transcribe_audio.init()
-    print("Transcribing audio...")
-    audio_utils.convert_video_to_audio(video_path, config.OUTPUT_FOLDER_PATH + "audio.wav")
-    audio, _ = librosa.load(config.OUTPUT_FOLDER_PATH + "audio.wav")
-    video_transcript = transcribe_audio.transcribe_audio(audio=audio)
-    try:
-        os.remove(config.OUTPUT_FOLDER_PATH + "audio.wav")
-    except:
-        pass
-    print("Transcript:\n")
-    print(video_transcript)
-    print("\n")
-
-    # Write transcript to text file
-    with open(config.OUTPUT_FOLDER_PATH + "video_transcript.txt", "w") as text_file:
-        text_file.write(video_transcript)
-
-    # Find common words in transcript
-    print("Common words in transcript ranked:\n")
-    common_words = transcribe_audio.find_common_words(video_transcript)
-    print("Word list\t   Frequency")
-    for word in common_words:
-        print(word[0] + (" " * (11 - len(word[0]))), "\t", word[1])
-
-    # Write word occurrences to csv file
-    with open(config.OUTPUT_FOLDER_PATH + "transcript_word_occurrences.csv", "w") as csv_file:
-        writer = csv.writer(csv_file, lineterminator='\n')
-        title = ["Word", "Frequency"]
-        writer.writerow(title)
-        for word in common_words:
-            writer.writerow(word)
-
-    print("\n\n\n+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
-    print("Check output folder for the output files, 'video_transcript.txt', 'transcript_word_occurrences.csv' and 'video_output.csv'")
-
-    transcribe_audio.delete_models()
-
+    
     return {
         "predictions": predictions,
         "sum_probs": sum_probs,
         "durations": durations,
-        "transcript": video_transcript,
-        "common_words": common_words,
         "confidence": max(sum_probs) / len(predictions),
         "softmax_probs_string": audio_utils.get_softmax_probs_string(sum_probs, list(config.EMOTION_INDEX.values()))
     }
+    
